@@ -2,3 +2,9 @@
 .python-version
 maven-version-range/
 unified_range/__pycache__
+Pipfile
+Pipfile.lock
+build/
+dist/
+test_data/
+unified_range.egg-info/

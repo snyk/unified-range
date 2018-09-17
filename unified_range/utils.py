@@ -4,7 +4,7 @@ from unified_version import models
 
 def _clean_semver(semver):
     # also cleaning `v=X.X.X` `= X.X.X`
-    # fixme: regex catching not valid semvers `<=v1.2.3` => `<1.2.3'
+    # TODO: regex catching invalid semvers `<=v1.2.3` => `<1.2.3'
     remove_eq = re.sub(r'(?<![<>])=?v?(?=.*?)', '', semver.strip())
     remove_eq_v = re.sub(r'(?<=[<>])v?(?=.*?)', '', remove_eq)
     return remove_eq_v
@@ -20,24 +20,25 @@ def _comparator_trim(semver):
     # switch `,` to ` ` for composer versions
     if ',' in semver:
         semver = semver.replace(',', ' ')
-    # fixme: check regex catching all data.
     COMPARTOR_TRIM = r'\s+(?=[^<>|])'
     return re.sub(COMPARTOR_TRIM, '', semver.strip())
 
 
 def transform_to_semver(unified_spec):
     """
-    npm spec list[">=16.0.0 <16.0.6", ">=16.1.0 <16.1.2", ">=16.2.0 <16.2.1", ">=16.3.0 <16.3.3", ">=16.4.0 <16.4.2"]
-    unified        (16.0.0,], [,16.0.6]
-                    (16.0.0,16.0.1]
-    :param semver:
-    :return: string
+    Transform unified spec (following the maven VersioRange spec,
+    https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html)
+    to semver range string representation (following npm/node spec,
+    https://github.com/npm/node-semver#ranges).
+
+    (1.2.3, 2.4.6] ----> >1.2.3 <=2.4.6
+    :param unified_spec: str
+    :return: semver: string
     """
     operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
     contains_all_version = models.UnifiedVersionRange(None, [
         models.Restriction.all_versions()])
     unified_version = models.UnifiedVersionRange.create_from_spec(unified_spec)
-    # fixme: return for `120 ==> * ==> (,)`
     if unified_version == contains_all_version:
         return "*"
 
@@ -77,19 +78,20 @@ def transform_to_semver(unified_spec):
                 semvers.append(
                     "{}{}".format(gt_gte, restriction.lower_bound))
             else:
-                # fixme: return here
                 raise ValueError("lower and upper bound are None")
     return " || ".join(semvers)
 
 
 def create_from_semver(semver):
     """
-    npm spec ||  ">=16.0.0 <16.0.6", ">=16.1.0 <16.1.2", ">=16.2.0 <16.2.1", ">=16.3.0 <16.3.3", ">=16.4.0 <16.4.2"
-    npm spec list[">=16.0.0 <16.0.6", ">=16.1.0 <16.1.2", ">=16.2.0 <16.2.1", ">=16.3.0 <16.3.3", ">=16.4.0 <16.4.2"]
-    one restriction >=16.0.0 <16.0.6"
-    unified        (16.0.0,], [,16.0.6]
-                    (16.0.0,16.0.1]
-    :param semver:
+    Transform semver range string (following npm/node spec,
+    https://github.com/npm/node-semver#ranges).
+
+    to unified VersionRange (following the maven VersioRange spec,
+    https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html).
+
+    >1.2.3 <=2.4.6 ----> (1.2.3, 2.4.6]
+    :param semver: str
     :return: VersionRange
     """
     operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}

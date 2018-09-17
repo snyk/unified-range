@@ -6,7 +6,9 @@ with open("README.md", "r") as fh:
 
 setup(
     name='unified_range',
-    version='0.0.1',
+    description="Convert between semver range and maven version range",
+    url="https://github.com/snyk/unified-range",
+    version='0.0.3',
     packages=['unified_range', ],
     license='MIT License',
     long_description=long_description,

@@ -6,10 +6,11 @@ with open("README.md", "r") as fh:
 
 setup(
     name='unified_range',
-    version='0.0.1-dev',
+    version='0.0.1',
     packages=['unified_range', ],
     license='MIT License',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

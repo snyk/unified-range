@@ -1,9 +1,10 @@
 from unittest import skip
 from unittest import TestCase
 
-from unified_version import models
-from unified_version import utils
-from unified_version import api
+from unified_range import models
+from unified_range import utils
+from unified_range import api
+
 
 @skip
 class ModelsTestCase(TestCase):
@@ -145,11 +146,13 @@ class UtilsTestCase(TestCase):
         # print(results)
         self.assertEqual(self.expected_comparator_trimmed, results)
 
+
 @skip
-# fixme: add result data
+# fixme: add expected result data
 class APITestCase(TestCase):
     def setUp(self):
         self.test_npm_semvers = []
+
     def test_npm_full_way(self):
         results = []
 
@@ -198,7 +201,6 @@ class APITestCase(TestCase):
         # except Exception as e:
         #     print("Exception: {}, Version range: {}".format(e, line))
 
-
     def test_pip_full_way(self):
         results = []
 
@@ -216,6 +218,3 @@ class APITestCase(TestCase):
         self.assertEqual(results, pip_ranges)
         # except Exception as e:
         #     print("Exception: {}, Version range: {}".format(e, line))
-
-    def test_to_semver(self):
-        pass

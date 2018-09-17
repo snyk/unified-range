@@ -1,5 +1,5 @@
-from unified_version import utils
-from unified_version import models
+from unified_range import utils
+from unified_range import models
 
 
 def from_semver(semver_spec):

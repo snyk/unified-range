@@ -1,5 +1,5 @@
 import re
-from unified_version import models
+from unified_range import models
 
 
 def _clean_semver(semver):

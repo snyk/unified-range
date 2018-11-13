@@ -1,4 +1,3 @@
-# class ComparableVersion(object):
 class Restriction(object):
     @classmethod
     def all_versions(cls):
@@ -34,7 +33,7 @@ class Restriction(object):
                     self.has_inclusive_upper == other.has_inclusive_upper)
             return lower_eq and upper_eq and inclusive_lower_eq and inclusive_upper_eq
         else:
-            # fixme: reaise exception
+            # fixme: raise exception
             return False
         # def contains_version(self, version):
     #     if self.lower_bound != None:
@@ -100,6 +99,7 @@ class UnifiedVersionRange(object):
     #
     # def get_restrictions(self):
     #     pass
+
     @staticmethod
     def parse_restriction(spec):
         has_inclusive_lower = spec.startswith("[")
@@ -116,7 +116,7 @@ class UnifiedVersionRange(object):
                                       has_inclusive_upper)
         else:
             lower_bound = process[0: index].strip()
-            upper_bound = process[index + 1:]
+            upper_bound = process[index + 1:].strip()
             if lower_bound == '' and upper_bound == '':
                 return Restriction.all_versions()
             if lower_bound == upper_bound:

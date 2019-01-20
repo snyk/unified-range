@@ -8,7 +8,7 @@ setup(
     name='unified_range',
     description="Convert between semver range and maven version range",
     url="https://github.com/snyk/unified-range",
-    version='0.0.7',
+    version='0.0.8',
     # packages=['unified_range', ],
     packages=find_packages(),
     license='MIT License',

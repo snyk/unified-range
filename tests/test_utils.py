@@ -120,3 +120,25 @@ def test_comparator_trim():
     for semver in before_trim:
         results.append(utils._comparator_trim(semver))
     assert (expected_comparator_trimmed == results)
+
+
+def test_transform_to_semver_failure():
+    results = []
+    for semver in test_npm_semver_ranges:
+        try:
+            utils.transform_to_semver(semver)
+            assert False, 'test_transform_to_semver_failure0 did not raise exception!'
+        except ValueError as msg:
+            assert ((str(msg) == 'Version ranges seems to already be semver')
+                    or (str(msg) == 'Recommended Version is currently not supported.'))
+
+
+def test_create_from_semver_failure():
+    results = []
+    for unified in expected_version_range:
+        try:
+            utils.create_from_semver(unified)
+            assert False, 'test_create_from_semver_failure did not raise exception!'
+        except ValueError as msg:
+            assert str(
+                msg) == 'Version ranges seems to already be maven version range'

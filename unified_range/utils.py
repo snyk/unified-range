@@ -60,6 +60,10 @@ def transform_to_semver(unified_spec: str) -> str:
     """
     # FIXME: use semver_operators and _is_semver_{ops,range}
     operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
+
+    if is_semver_range(unified_spec):
+        raise ValueError(
+            "Version ranges seems to already be semver")
     contains_all_version = models.UnifiedVersionRange(None, [
         models.Restriction.all_versions()])
     unified_version = models.UnifiedVersionRange.create_from_spec(unified_spec)
@@ -120,6 +124,9 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
     """
     operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
 
+    if is_unified_range(semver):
+        raise ValueError(
+            "Version ranges seems to already be maven version range")
     if not any(op in semver for op in operators.values()):
         semver = _clean_semver(semver)
     else:

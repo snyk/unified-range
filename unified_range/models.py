@@ -1,3 +1,6 @@
+from typing import List, Tuple
+
+
 class Restriction(object):
     @classmethod
     def all_versions(cls):
@@ -36,8 +39,14 @@ class Restriction(object):
             # fixme: raise exception
             return False
         # def contains_version(self, version):
+
     #     if self.lower_bound != None:
     #         comparison = self.lower_bound.compare_to
+
+    @property
+    def bounds(self) -> Tuple[Tuple[str]]:
+        return ((self.lower_bound, self.has_inclusive_lower),
+                (self.upper_bound, self.has_inclusive_upper))
 
 
 class Version(object):
@@ -96,9 +105,9 @@ class UnifiedVersionRange(object):
 
     # def get_recommended_version(self):
     #     pass
-    #
-    # def get_restrictions(self):
-    #     pass
+    @property
+    def constraints(self) -> List[Restriction]:
+        return self.restrictions
 
     @staticmethod
     def parse_restriction(spec):
@@ -138,7 +147,7 @@ class UnifiedVersionRange(object):
         return restriction
 
     @staticmethod
-    def create_from_spec(spec):
+    def create_from_spec(spec: str):
         """
         :param spec:
         :return:

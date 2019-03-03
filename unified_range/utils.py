@@ -1,5 +1,19 @@
 import re
+from typing import Optional, List
+
 from unified_range import models
+
+from unified_range.models import UnifiedVersionRange
+
+
+def is_semver_range(rng):
+    semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
+    return any(op in rng for op in semver_operators.values())
+
+
+def is_unified_range(rng):
+    unified_operators = {"lt": ")", "lte": "]", "gt": "(", "gte": "["}
+    return any(op in rng for op in unified_operators.values())
 
 
 def _clean_semver(semver):
@@ -10,7 +24,7 @@ def _clean_semver(semver):
     return remove_eq_v
 
 
-def _comparator_trim(semver):
+def _comparator_trim(semver: str) -> str:
     """
     clean spaces between operator to the version.
     `> 1.2.3 <= 1.2.5` => `>1.2.3 <=1.2.5`
@@ -24,7 +38,25 @@ def _comparator_trim(semver):
     return re.sub(COMPARTOR_TRIM, '', semver.strip())
 
 
-def transform_to_semver(unified_spec):
+# def not_included_versions(versions: List[str],
+#                           unified_ranges: List[UnifiedVersionRange]
+#                           ) -> List[str]:
+#     """
+#     return the intersection of the versions list and the version ranges.
+#     versions should be ordered.
+#     :param versions, versions_ranges
+#     :return: version list
+#     """
+#     versions_list = versions
+#     for unif_rng in unified_ranges:
+#         for rest in unif_rng.restrictions
+#             semver = semver.replace(',', ' ')
+#     not_included_versions = []
+#     COMPARTOR_TRIM = r'\s+(?=[^<>|])'
+#     return not_included_versions
+#
+
+def transform_to_semver(unified_spec: str) -> str:
     """
     Transform unified spec (following the maven VersioRange spec,
     https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html)
@@ -82,7 +114,7 @@ def transform_to_semver(unified_spec):
     return " || ".join(semvers)
 
 
-def create_from_semver(semver):
+def create_from_semver(semver: str) -> UnifiedVersionRange:
     """
     Transform semver range string (following npm/node spec,
     https://github.com/npm/node-semver#ranges).
@@ -143,3 +175,62 @@ def create_from_semver(semver):
             models.Restriction(lower_version, has_inclusive_lower,
                                upper_version, has_inclusive_upper))
     return models.UnifiedVersionRange(None, restrictions)
+
+
+def not_inculded_versions(ordered_version_list: List[str],
+                          ranges_list: List[UnifiedVersionRange]):
+    """
+
+    :param ordered_version_list:
+    :param ranges_list:
+    :return:
+    """
+
+    def _get_index(lst: List[str], item: str, include: bool = False) -> int:
+        """
+        get index of item in list
+        """
+        ret = None
+        try:
+            # only first one that found
+            ret = lst.index(item)
+        except ValueError as e:
+            print(f"item {item} couldn't be found in the list")
+            # raise ValueError(f"item {item} couldn't be found in the list")
+
+        if ret and include:
+            ret = ret + 1
+        return ret
+
+    included_indexes = []
+    last_index = len(ordered_version_list) - 1
+    first_index = 0
+    # FIXME: remove operators
+    for rng in ranges_list:
+        # calculate index of the ordered_version_list slices
+        # using new property `constraints` isn't necessary
+        for rst in rng.constraints:
+            import pudb
+            pudb.set_trace()
+            lower, upper = rst.bounds
+            lower_index = _get_index(ordered_version_list, str(lower[0]),
+                                     lower[1])
+            upper_index = _get_index(ordered_version_list, str(upper[0]),
+                                     upper[1])
+            # use of on the list and intersection .. [:]
+            print({str(upper[0]): upper_index,str(lower[0]): lower_index})
+            if lower_index and upper_index:
+                included_indexes.append(set(range(lower_index, upper_index)))
+            elif lower_index and not upper_index:
+                included_indexes.append(set(range(lower_index, last_index)))
+            elif not lower_index and upper_index:
+                included_indexes.append(set(range(first_index, upper_index)))
+            else:
+                continue
+    if included_indexes:
+        ind_to_remove = set.union(*included_indexes)
+    else:
+        ind_to_remove = []
+    not_included = [v for i, v in enumerate(ordered_version_list) if
+                    i not in ind_to_remove]
+    return not_included

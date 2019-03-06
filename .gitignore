@@ -8,3 +8,6 @@ build/
 dist/
 test_data/
 unified_range.egg-info/
+.hypothesis/
+venv/
+*.pyc

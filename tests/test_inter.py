@@ -1,16 +1,18 @@
+from math import isnan, isinf
+
 from hypothesis import given, example, note, assume
-from hypothesis.strategies import (lists, sampled_from, floats, from_regex,
-                                   text, integers, sampled_from, booleans,
-                                   composite)
+from hypothesis.strategies import (sampled_from, integers, booleans,
+                                   composite, data)
 
 from unified_range.api import inter
 
-VERSIONS = [str(x) for x in range(20)]
+N = 20
+VERSIONS = [str(x) for x in range(N)]
 
 
 @composite
 def versions(draw):
-    return draw(integers())
+    return draw(integers(min_value=0, max_value=N))
 
 
 @composite
@@ -23,17 +25,53 @@ def rights(draw):
     return draw(sampled_from('])'))
 
 
-def _check(result, left, v1=float('-inf'), v2=float('inf'), right=None):
+@composite
+def range_tuples(draw):
+    """
+    create a random maven-style version range, returned as a tuple:
+    left: opening bracket `[` or `(`
+    v1: the "lower" version in the range, could be an empty string
+    v2: the "upper" version in the range, could be an empty string ONLY if v1
+        is not empty
+    right: closing bracket `]` or `)`
+    """
+    left = draw(lefts())
+    right = draw(rights())
+
+    # a range must have either v1 or v2
+    v1_defined = draw(booleans())
+    v2_defined = draw(booleans())
+    assume(v1_defined or v2_defined)
+    v1 = draw(versions()) if v1_defined else ''
+    v2 = draw(versions()) if v2_defined else ''
+    # make sure v1 < v2, but only if both were defined
+    assume(not v1_defined or not v2_defined or v1 < v2)
+
+    return (left, v1, v2, right)
+
+
+def range_tuple_to_str(range_tup):
+    left, v1, v2, right = range_tup
+    return f'{left}{v1},{v2}{right}'
+
+
+def _check(result, left, v1='', v2='', right=None):
     """
     for the range `[A,B)` to be tested with a result, call this function with:
     left='[', v1=A, v2=B, right=')'
     """
-    # the inf and -inf default values are to null checks when they were not given
-    # IMPORTANT: `right` must be given despite the default. This default is a python
-    # limitation (otherwise we get SyntaxError). The order of arguments was
-    # chosen for readability (left, v1, v2, right).
-    assert right is not None
-    max_version_before_range = v1 if left == '(' else v1-1
+    # IMPORTANT: `right` must be given despite the default. This default is a
+    # python limitation (otherwise we get SyntaxError). The order of arguments
+    # was chosen for readability (left, v1, v2, right).
+
+    # the inf and -inf default values are to nullify checks when
+    # versions were not given.
+    if v1 == '':
+        v1 = float('-inf')
+    if v2 == '':
+        v2 = float('inf')
+
+    max_version_before_range = v1 if (left == '(') else v1-1
     min_version_after_range = v2 if right == ')' else v2+1
     for x in result:
         i = int(x)
@@ -80,6 +118,7 @@ def test_2_param_range(left, v1, v2, right):
     result = inter(VERSIONS, ranges)
     _check(result, left, v1, v2, right)
 
+
 @given(left1=lefts(),
        v11=versions(),
        v12=versions(),
@@ -90,7 +129,7 @@ def test_2_param_range(left, v1, v2, right):
        v22=versions(),
        right2=rights())
 def test_two_2_param_ranges(left1, v11, v12, right1,
-                    left2, v21, v22, right2):
+                            left2, v21, v22, right2):
     assume(v11 < v12)
     assume(v21 < v22)
 
@@ -100,3 +139,15 @@ def test_two_2_param_ranges(left1, v11, v12, right1,
     result = inter(VERSIONS, ranges)
     _check(result, left1, v11, v12, right1)
     _check(result, left2, v21, v22, right2)
+
+
+@given(data())
+def test_many_ranges(data):
+    # number of version ranges to use
+    n_ranges = data.draw(integers(min_value=0, max_value=N+1))
+    rng_tuples = [data.draw(range_tuples()) for _ in range(n_ranges)]
+    ranges = [range_tuple_to_str(rng) for rng in rng_tuples]
+    note(ranges)
+    result = inter(VERSIONS, ranges)
+    for rng in rng_tuples:
+        _check(result, *rng)

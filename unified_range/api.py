@@ -44,6 +44,7 @@ def inter(versions: List[str], rngs: List[str]):
         elif is_unified_range(rng):
             rngs_unified.append(unified_range(rng))
         else:
-            raise ValueError('Not a valid semver or unified/maven range')
+            raise ValueError(
+                f'Not a valid semver or unified/maven range - ({rng})')
 
     return utils.not_inculded_versions(versions, rngs_unified)

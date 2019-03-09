@@ -1,19 +1,21 @@
 import re
-from typing import Optional, List
+from typing import List, NamedTuple, Optional
 
 from unified_range import models
 
-from unified_range.models import UnifiedVersionRange
+from unified_range.models import UnifiedVersionRange, Bound
+
+# Bound = NamedTuple("Bound", (['version', str], ['inclusive', str]))
+semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
+unified_operators = {"lt": ")", "lte": "]", "gt": "(", "gte": "["}
 
 
-def is_semver_range(rng):
-    semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
-    return any(op in rng for op in semver_operators.values())
-
-
-def is_unified_range(rng):
-    unified_operators = {"lt": ")", "lte": "]", "gt": "(", "gte": "["}
+def _is_unified_ops(rng):
     return any(op in rng for op in unified_operators.values())
+
+
+def _is_semver_ops(rng):
+    return any(op in rng for op in semver_operators.values())
 
 
 def _clean_semver(semver):
@@ -36,6 +38,14 @@ def _comparator_trim(semver: str) -> str:
         semver = semver.replace(',', ' ')
     COMPARTOR_TRIM = r'\s+(?=[^<>|])'
     return re.sub(COMPARTOR_TRIM, '', semver.strip())
+
+
+def is_semver_range(rng):
+    return _is_semver_ops(rng) and not _is_unified_ops(rng)
+
+
+def is_unified_range(rng):
+    return _is_unified_ops(rng) and not _is_semver_ops(rng)
 
 
 # def not_included_versions(versions: List[str],
@@ -78,9 +88,9 @@ def transform_to_semver(unified_spec: str) -> str:
     semvers = []
 
     for restriction in unified_restrictions:
-        if restriction.upper_bound and restriction.lower_bound:
+        if restriction.upper_bound.version and restriction.lower_bound.version:
             # specific version
-            if restriction.lower_bound == restriction.upper_bound:
+            if restriction.lower_bound.version == restriction.upper_bound.version:
                 semvers.append("{}".format(restriction.upper_bound))
             # two constraints semver `>1.1.2 <=2.0.0`
             # `{operator}{version} {operator}{version}`
@@ -97,13 +107,13 @@ def transform_to_semver(unified_spec: str) -> str:
         # one constraint semver `>=1.2.3`
         # {operator}{version}
         else:
-            if restriction.upper_bound and not restriction.lower_bound:
+            if restriction.upper_bound.version and not restriction.lower_bound.version:
                 lt_lte = operators["lt"]
                 if restriction.has_inclusive_upper:
                     lt_lte = operators["lte"]
                 semvers.append(
                     "{}{}".format(lt_lte, restriction.upper_bound))
-            elif restriction.lower_bound and not restriction.upper_bound:
+            elif restriction.lower_bound.version and not restriction.upper_bound.version:
                 gt_gte = operators["gt"]
                 if restriction.has_inclusive_lower:
                     gt_gte = operators["gte"]
@@ -165,8 +175,19 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
                 lower_bound = constraint
                 has_inclusive_lower = True
                 has_inclusive_upper = True
-        lower_version = None
-        upper_version = None
+        # lower_version = None
+        # upper_version = None
+        # if lower_bound:
+        #     lower_version = models.Version(lower_bound)
+        # if upper_bound:
+        #     upper_version = models.Version(upper_bound)
+        # restrictions.append(
+        #     models.Restriction(lower_version, has_inclusive_lower,
+        #                        upper_version, has_inclusive_upper))
+
+
+        lower_version = models.Version(None)
+        upper_version = models.Version(None)
         if lower_bound:
             lower_version = models.Version(lower_bound)
         if upper_bound:
@@ -174,6 +195,11 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
         restrictions.append(
             models.Restriction(lower_version, has_inclusive_lower,
                                upper_version, has_inclusive_upper))
+        # FIXME: Version in __init__ / removal of Version ?
+        # restrictions.append(
+        #     models.Restriction(lower_bound, has_inclusive_lower,
+        #                        upper_bound, has_inclusive_upper))
+
     return models.UnifiedVersionRange(None, restrictions)
 
 
@@ -186,22 +212,27 @@ def not_inculded_versions(ordered_version_list: List[str],
     :return:
     """
 
-    def _get_index(lst: List[str], item: str, include: bool = False) -> int:
+    def _get_index(ver_lst: List[str], ver: Optional[str],
+                   include: bool = False) -> int:
         """
         get index of item in list
         """
-        ret = None
-        try:
-            # only first one that found
-            ret = lst.index(item)
-        except ValueError as e:
-            print(f"item {item} couldn't be found in the list")
-            # raise ValueError(f"item {item} couldn't be found in the list")
+        if ver is None:
+            return
 
-        if ret and include:
+        ret = None
+        if ver in ver_lst:
+            # only first one that found
+            ret = ver_lst.index(ver)
+        else:
+            raise ValueError(
+                f"Version {ver} couldn't be found in the versions list {ver_lst}")
+
+        if ret is not None and include:
             ret = ret + 1
         return ret
 
+    # FIXME: Can be set?
     included_indexes = []
     last_index = len(ordered_version_list) - 1
     first_index = 0
@@ -213,17 +244,28 @@ def not_inculded_versions(ordered_version_list: List[str],
             # import pudb
             # pudb.set_trace()
             lower, upper = rst.bounds
-            lower_index = _get_index(ordered_version_list, str(lower[0]),
-                                     lower[1])
-            upper_index = _get_index(ordered_version_list, str(upper[0]),
-                                     upper[1])
+            if lower == upper:
+                # Exact version range - `[VER]`
+                # lower or upper versions can be taken, and inclusive set to false
+                # to get the right index.
+                exact_index = _get_index(ordered_version_list, lower.version,
+                                         False)
+                included_indexes.append(set((exact_index,)))
+                continue
+            # FIXME: Maybe need to be implemented somewhere else - _get_index or the bounds property?
+            # check here if version is None
+            # FIXME: catch exceptions?
+            lower_index = _get_index(ordered_version_list, lower.version,
+                                     not lower.inclusive)
+            upper_index = _get_index(ordered_version_list, upper.version,
+                                     upper.inclusive)
             # use of on the list and intersection .. [:]
-            print({str(upper[0]): upper_index,str(lower[0]): lower_index})
-            if lower_index and upper_index:
+            print({upper.version: upper_index, lower.version: lower_index})
+            if lower_index is not None and upper_index is not None:
                 included_indexes.append(set(range(lower_index, upper_index)))
-            elif lower_index and not upper_index:
-                included_indexes.append(set(range(lower_index, last_index)))
-            elif not lower_index and upper_index:
+            elif lower_index is not None and upper_index is None:
+                included_indexes.append(set(range(lower_index, last_index + 1)))
+            elif lower_index is None and upper_index is not None:
                 included_indexes.append(set(range(first_index, upper_index)))
             else:
                 continue

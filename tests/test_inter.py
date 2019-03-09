@@ -1,13 +1,15 @@
 from math import isnan, isinf
 
-from hypothesis import given, example, note, assume
+from hypothesis import given, example, note, assume, reproduce_failure, \
+    settings, HealthCheck
 from hypothesis.strategies import (sampled_from, integers, booleans,
                                    composite, data)
 
 from unified_range.api import inter
 
 N = 20
-VERSIONS = [str(x) for x in range(N)]
+# range was 0-19 but versions in ranges could be 20 which lead to value error
+VERSIONS = [str(x) for x in range(N + 1)]
 
 
 @composite
@@ -70,9 +72,8 @@ def _check(result, left, v1='', v2='', right=None):
         v1 = float('-inf')
     if v2 == '':
         v2 = float('inf')
-
-    max_version_before_range = v1 if (left == '(') else v1-1
-    min_version_after_range = v2 if right == ')' else v2+1
+    max_version_before_range = v1 if (left == '(') else v1 - 1
+    min_version_after_range = v2 if right == ')' else v2 + 1
     for x in result:
         i = int(x)
         assert i <= max_version_before_range or min_version_after_range <= i
@@ -141,10 +142,13 @@ def test_two_2_param_ranges(left1, v11, v12, right1,
     _check(result, left2, v21, v22, right2)
 
 
+# @reproduce_failure('4.8.0', b'AAEAAAABAA==')
+# FIXME: THIS IS FU***NG AWESOME ^^^^
 @given(data())
+@settings(suppress_health_check=(HealthCheck.filter_too_much,))
 def test_many_ranges(data):
     # number of version ranges to use
-    n_ranges = data.draw(integers(min_value=0, max_value=N+1))
+    n_ranges = data.draw(integers(min_value=0, max_value=N + 1))
     rng_tuples = [data.draw(range_tuples()) for _ in range(n_ranges)]
     ranges = [range_tuple_to_str(rng) for rng in rng_tuples]
     note(ranges)

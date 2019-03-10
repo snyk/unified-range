@@ -6,7 +6,7 @@ from unified_range import models
 from unified_range.models import UnifiedVersionRange, Bound
 
 # Bound = NamedTuple("Bound", (['version', str], ['inclusive', str]))
-semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">="}
+semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">=", "eq": "="}
 unified_operators = {"lt": ")", "lte": "]", "gt": "(", "gte": "["}
 
 
@@ -47,24 +47,6 @@ def is_semver_range(rng):
 def is_unified_range(rng):
     return _is_unified_ops(rng) and not _is_semver_ops(rng)
 
-
-# def not_included_versions(versions: List[str],
-#                           unified_ranges: List[UnifiedVersionRange]
-#                           ) -> List[str]:
-#     """
-#     return the intersection of the versions list and the version ranges.
-#     versions should be ordered.
-#     :param versions, versions_ranges
-#     :return: version list
-#     """
-#     versions_list = versions
-#     for unif_rng in unified_ranges:
-#         for rest in unif_rng.restrictions
-#             semver = semver.replace(',', ' ')
-#     not_included_versions = []
-#     COMPARTOR_TRIM = r'\s+(?=[^<>|])'
-#     return not_included_versions
-#
 
 def transform_to_semver(unified_spec: str) -> str:
     """
@@ -185,7 +167,6 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
         #     models.Restriction(lower_version, has_inclusive_lower,
         #                        upper_version, has_inclusive_upper))
 
-
         lower_version = models.Version(None)
         upper_version = models.Version(None)
         if lower_bound:
@@ -206,7 +187,7 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
 def not_inculded_versions(ordered_version_list: List[str],
                           ranges_list: List[UnifiedVersionRange]):
     """
-
+    asdnklfdsnoids
     :param ordered_version_list:
     :param ranges_list:
     :return:
@@ -220,7 +201,6 @@ def not_inculded_versions(ordered_version_list: List[str],
         if ver is None:
             return
 
-        ret = None
         if ver in ver_lst:
             # only first one that found
             ret = ver_lst.index(ver)
@@ -228,51 +208,56 @@ def not_inculded_versions(ordered_version_list: List[str],
             raise ValueError(
                 f"Version {ver} couldn't be found in the versions list {ver_lst}")
 
-        if ret is not None and include:
+        if include:
             ret = ret + 1
         return ret
 
     # FIXME: Can be set?
-    included_indexes = []
-    last_index = len(ordered_version_list) - 1
+    rst_indices: List[set] = []
+    last_index = len(ordered_version_list)
     first_index = 0
     # FIXME: remove operators
     for rng in ranges_list:
         # calculate index of the ordered_version_list slices
         # using new property `constraints` isn't necessary
         for rst in rng.constraints:
-            # import pudb
-            # pudb.set_trace()
             lower, upper = rst.bounds
             if lower == upper:
+                if not lower.version and not upper.version:
+                    # (,) [,] - all version included
+                    return []
                 # Exact version range - `[VER]`
                 # lower or upper versions can be taken, and inclusive set to false
                 # to get the right index.
-                exact_index = _get_index(ordered_version_list, lower.version,
-                                         False)
-                included_indexes.append(set((exact_index,)))
+                exact_index = _get_index(ordered_version_list, lower.version)
+                # exact index to be removed is added as a set to rst_indices
+                rst_indices.append(set((exact_index,)))
                 continue
-            # FIXME: Maybe need to be implemented somewhere else - _get_index or the bounds property?
-            # check here if version is None
-            # FIXME: catch exceptions?
+            # range?
             lower_index = _get_index(ordered_version_list, lower.version,
                                      not lower.inclusive)
             upper_index = _get_index(ordered_version_list, upper.version,
                                      upper.inclusive)
             # use of on the list and intersection .. [:]
             print({upper.version: upper_index, lower.version: lower_index})
+            # [X,Y]
             if lower_index is not None and upper_index is not None:
-                included_indexes.append(set(range(lower_index, upper_index)))
+                rst_indices.append(set(range(lower_index, upper_index)))
+            # [X,]
             elif lower_index is not None and upper_index is None:
-                included_indexes.append(set(range(lower_index, last_index + 1)))
+                rst_indices.append(set(range(lower_index, last_index)))
+            # [,Y]
             elif lower_index is None and upper_index is not None:
-                included_indexes.append(set(range(first_index, upper_index)))
+                rst_indices.append(set(range(first_index, upper_index)))
+            # [,] - FIXME: think
             else:
                 continue
-    if included_indexes:
-        ind_to_remove = set.union(*included_indexes)
+
+    if rst_indices:
+        ind_to_remove = set.union(*rst_indices)
     else:
         ind_to_remove = []
+
     not_included = [v for i, v in enumerate(ordered_version_list) if
                     i not in ind_to_remove]
     return not_included

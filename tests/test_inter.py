@@ -1,7 +1,4 @@
-from math import isnan, isinf
-
-from hypothesis import given, example, note, assume, reproduce_failure, \
-    settings, HealthCheck
+from hypothesis import given, example, note, assume, settings, HealthCheck
 from hypothesis.strategies import (sampled_from, integers, booleans,
                                    composite, data)
 
@@ -43,7 +40,7 @@ def range_tuples(draw):
     # a range must have either v1 or v2
     v1_defined = draw(booleans())
     v2_defined = draw(booleans())
-    assume(v1_defined or v2_defined)
+    assume((v1_defined or v2_defined) or (left == "(" and right == ")"))
     v1 = draw(versions()) if v1_defined else ''
     v2 = draw(versions()) if v2_defined else ''
     # make sure v1 < v2, but only if both were defined

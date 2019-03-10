@@ -5,22 +5,16 @@ from attr import dataclass
 
 # Bound = namedtuple("Bound", ("version", "inclusive"))
 
-
 @dataclass
 class Bound:
     version: str
     inclusive: bool = False
 
 
+# FIXME: change implemntation of Version - str
 class Version(object):
     def __init__(self, version):
         self.version = version
-        # # fixme: Remove
-        # self.major_version = None
-        # self.minor_version = None
-        # self.increm_version = None
-        # self.build_number = None
-        # self.qualifier = None
 
     def __str__(self):
         return f"{self.version}"
@@ -31,26 +25,13 @@ class Version(object):
         else:
             return False
 
-    # def __lt__(self, other):
-    #     if self.version == other.version:
-    #         ret
-    #
-    #     pass
-    #     # if isinstance(other_version, DefaultArtifactVersion):
-    #     #     return self.compare_to()
-    #     # else:
-    #     #     return compare_to(DefaultArtifactVersion(str(other_version)))
-
-    def parse_version(self, version):
-        pass
-
 
 class Restriction(object):
 
     @classmethod
     def all_versions(cls):
         return cls(Version(None), False, Version(None), False)
-
+    # FIXME: change constructor to use `Bound`
     def __init__(self, lower_bound: Version, has_inclusive_lower: bool,
                  upper_bound: Version, has_inclusive_upper: bool):
         if not all((isinstance(lower_bound, Version),
@@ -116,7 +97,6 @@ class Restriction(object):
 
 class UnifiedVersionRange(object):
     # FIXME: REMOVE recommended_version feature - unused
-
     def __init__(self, recommended_version, restrictions):
         self.recommended_version = recommended_version
         self.restrictions = restrictions

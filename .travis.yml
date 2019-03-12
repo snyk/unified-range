@@ -1,0 +1,22 @@
+sudo: false
+dist: trusty
+language: python
+python:
+  - "3.6"
+notifications:
+  email: false
+install:
+  - "pip install pipenv"
+  - "pipenv install --ignore-pipfile --dev"
+script:
+  - "pipenv run pytest"
+deploy:
+  provider: pypi
+  user: "snyk"
+  password:
+    secure: "FvLpH2QceDuPK8TbxgEspz1G4CPKNmtCft3rDziOD88JlCLd9zX2FQi0YU1iQ3Jqchuu1M/0alwCjlNyHdjpmxeVxIHt2TdtR5yFsZz98lR7FsDE53p60A98UpeKIpHp0P2/jNjW265qH3cqt1uI8H7XpN1Yn/iUgJkzOAFOYJeNsRwfpv6vSyCKlB2s5h0SExD9e84iEraaJ6iC1HnEG0vpH13lpWB/5ZTtuJA9vJJwnPd73MBh9cEeDcSPGjOtVAWVHP1HcJbTrJXIFv8mo7NyuUPnL+H5OsHTm1aUCwvh0cKqAVOkzOcdAUuaqgHwJU0teafPMQLUg6v0FzLhCozBWlQRsku8oBkQgO+ugXQL+oSvM1ny3mG5Em6p4uyPkosh7g/xjIW2CGj/Tt8JKxHWk0kaWPoocC23aOIh5+vrDtKCzktjkHHPntv4iS2hcQKw8qI7qDCUWFKDMXWr7qMGQg11pkhr43W5bgLtSA8ClWaBuzW3vgum0UyDBNwN3CxsaGzbl5cHLTgVwSPGLbf6bDeIcePKLAXkCZ3QwBqnjATfUG+P9vv5g1D2YTZZoq/FH29isb5vG8qDSafoKQ2m9Gud+mNwAvduVh7luwTgV4+xdZnyEzyUyDuXyj+hlhZ0ByhgcGv2aEJGLIO6lLfzA4F2QxATb2SVXVAKiio="
+  on:
+    branch: master
+branches:
+  only:
+   - master

@@ -37,3 +37,6 @@ or
 
 `ver_rng = api.unified_range(unified_spec_str)`
 
+5. Filter versions list by list of ranges:
+
+`filtered_lst = api.filter_versions(ordered_version_list, ranges)`

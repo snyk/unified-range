@@ -2,21 +2,21 @@ sudo: false
 dist: trusty
 language: python
 python:
-  - "3.6"
+- '3.6'
 notifications:
   email: false
 install:
-  - "pip install pipenv"
-  - "pipenv install --ignore-pipfile --dev"
+- pip install pipenv
+- pipenv install --ignore-pipfile --dev
 script:
-  - "pipenv run pytest"
+- pipenv run pytest
 deploy:
   provider: pypi
-  user: "snyk"
+  user: snyk
   password:
-    secure: "c7Dgu4DDBYU5EUWhjqQcE3EnjI0/bANQF/7YQsUoRQBU1hBLE0PruHUVJKFcP/KU4QxRTA9MjogesvEeFLdk6JQtiMDHDKcysQOhMJgBijt+y2lDzAEy+pXIuYsCdRLnfkriuxM75GDwTEDQuRF+0iK1HjanPKgmu+PYSx04sTReW6qC3KAM0V0g98aAafjcAHn8yjm34f+4/R32XSl8VkH4CcPXTvScEqTdgtiGfO35yhXknCXVFrqMbQ+gxIlkXG09tx7sfMRMHrE+E8H76YRllhPfsvR0fSUI/8xw/uK4+ORtJituw1t/MWQXHiA+HlC1c0OwRX4MJN24BbjRdF9xNPddz4yAB17q50286CboWvEjzy34fUH+4h3N8peACvKoOC/yQpyFRTfqe1VZEgGGo9DLXMPZ4nWZibLprMyHOawsPV+fOW2RoRvoWkzKqr6PaUJ209L2wA03ZFSbyTyImNRue56EZkxOlvreuCh4LzfDLlFsGKeXgo18znR8Ev9bAsP+llAFqacVzDU09wAoepRfTglarwoIu5QinUnX1d7Zs8aymqUkuOfxVID6uTlWK4EUNusuQRJx+pP1L3ujtEEXKHBWns/afjiq50H0PNQXmX5FFopXP9t6rDLwET6FiHdRz2SkwBUnvrYvzcETuVH68z/FAxXFmdw6d90="
+    secure: iVYTa42kB2yfA/nbGdYzkSLt9mANSTA5cHLuQyaeXpIKv4H189kr+VBKIAYk6Q/pjg9z2q7INGBfrUetO5hfpFAgp92n8oCvW6v6NeMZxs+G6JsUQ9rdCNJfPfO/7TvD/X3w+6o3Ob1Y9lmYK/3v8Q2vkc+S9+4AIW9wMgC1WqWom+X7gJFMLQaFZqaZzNkZbQXzALHJPdvmO9zaY5W+0yXw8rXG1CKqzxpKPPTELav0ndcrmbhr8vUUaKZl1EseJYhDGiqyL0duOrZU0bJbF4N4tyHV9PicvQBAMDiHUB6HK5Qx4P1gqtE6OgmMTimQ/iXlKzH3yZbPgYfzXFvm6CN6+qFf57P9n/XzAwo0fCORsNc8DnyD+RbwSCqZUSaJsl8tUf2WCd23f2YtZi52xe3cZMc0RLvUUZmkklO7z3ZyerZGtAeMJ4eFYG1N7qhwqUeuk9TWH3zKPJMBdlkSQdbwQ5eVU1c1GdA1eKs+AF+4WGfpEVUpTuL1sYD/9N61stOa6bCFIejhynaPJQedt0/d9/loyzqdkHDyranQt1eN0laMMnUX0v2wQLtAu0beO+yZegvcQHR39DlllMGtEeZN4z63o4PwI3GGlhTU+UzafCBgSaoE2lrPq5VCINCgiSgh5dVbbu3IIRiOYn+R7nWcg4doK/dlYkSPdl5MckI=
   on:
     branch: master
 branches:
   only:
-   - master
+  - master

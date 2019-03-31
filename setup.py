@@ -8,12 +8,15 @@ setup(
     name='unified_range',
     description="Convert between semver range and maven version range",
     url="https://github.com/snyk/unified-range",
-    version='0.0.5',
+    version='0.0.6',
     # packages=['unified_range', ],
     packages=find_packages(),
     license='MIT License',
     long_description=long_description,
     long_description_content_type='text/markdown',
+    install_requires=[
+        'attrs',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

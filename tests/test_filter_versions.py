@@ -126,6 +126,7 @@ def test_2_param_range(left, v1, v2, right):
        v21=versions(),
        v22=versions(),
        right2=rights())
+@settings(suppress_health_check=(HealthCheck.filter_too_much,))
 def test_two_2_param_ranges(left1, v11, v12, right1,
                             left2, v21, v22, right2):
     assume(v11 < v12)

@@ -226,7 +226,6 @@ def not_included_versions(ordered_version_list: List[str],
             upper_index = _get_index(ordered_version_list, upper.version,
                                      upper.inclusive)
             # use of on the list and intersection .. [:]
-            print({upper.version: upper_index, lower.version: lower_index})
             # [X,Y]
             if lower_index is not None and upper_index is not None:
                 rst_indices.append(set(range(lower_index, upper_index)))

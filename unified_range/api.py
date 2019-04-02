@@ -36,10 +36,11 @@ def unified_range(spec: str) -> UnifiedVersionRange:
     return UnifiedVersionRange.create_from_spec(spec)
 
 
-def filter_versions(ord_versions: List[str], ranges: List[str]) -> List[str]:
+def filter_versions(asc_versions: List[str], ranges: List[str]) -> List[str]:
     """
-    Return list of versions (ordered the same way) that not satisfies any range.
-    Versions must be ordered and include all the versions that are specified in the ranges.
+    Return an ordered list of versions that not satisfies any range.
+    Input versions must be ordered in ascending order and include all
+    the versions that are specified in the ranges.
     :param ord_versions:
     :param ranges:
     :return:
@@ -54,4 +55,4 @@ def filter_versions(ord_versions: List[str], ranges: List[str]) -> List[str]:
             raise ValueError(
                 f'Not a valid semver or unified/maven range - ({rng})')
 
-    return utils.not_included_versions(ord_versions, rngs_unified)
+    return utils.not_included_versions(asc_versions, rngs_unified)

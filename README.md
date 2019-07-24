@@ -43,3 +43,12 @@ or
 `filtered_lst = api.filter_versions(ascending_version_list, ranges)`
 The versions in `ascending_version_list` should be sorted in ascending order,
 from oldest to newest, and contain all the versions for the package.
+
+6. Filter next version and maximum versions from list of version and ranges:
+
+`next_version = api.next_filtered_version(current_version, ascending_version_list, ranges)`
+current_version must be part of the ascending_version_list list.
+
+`max_versions = api.maximum_filtered_version(ascending_version_list, ranges)`
+
+

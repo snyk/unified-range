@@ -2,7 +2,7 @@ from hypothesis import given, example, note, assume, settings, HealthCheck
 from hypothesis.strategies import (sampled_from, integers, booleans,
                                    composite, data)
 
-from unified_range.api import filter_versions
+from unified_range import api
 
 N = 20
 # range was 0-19 but versions in ranges could be 20 which lead to value error
@@ -81,7 +81,7 @@ def _check(result, left, v1='', v2='', right=None):
 def test_single_version_range(v):
     ranges = [f'[{v}]']
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     assert str(v) not in result
 
 
@@ -91,7 +91,7 @@ def test_single_version_range(v):
 def test_unbound_lower_version(left, v, right):
     ranges = [f'{left},{v}{right}']
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     _check(result, left=left, v2=v, right=right)
 
 
@@ -101,7 +101,7 @@ def test_unbound_lower_version(left, v, right):
 def test_unbound_upper_version(left, v, right):
     ranges = [f'{left}{v},{right}']
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     _check(result, left=left, v1=v, right=right)
 
 
@@ -113,7 +113,7 @@ def test_2_param_range(left, v1, v2, right):
     assume(v1 < v2)
     ranges = [f'{left}{v1},{v2}{right}']
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     _check(result, left, v1, v2, right)
 
 
@@ -135,12 +135,11 @@ def test_two_2_param_ranges(left1, v11, v12, right1,
     ranges = [f'{left1}{v11},{v12}{right1}',
               f'{left2}{v21},{v22}{right2}']
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     _check(result, left1, v11, v12, right1)
     _check(result, left2, v21, v22, right2)
 
 
-# @reproduce_failure('4.8.0', b'AAEAAAABAA==')
 @given(data())
 @settings(suppress_health_check=(HealthCheck.filter_too_much,))
 def test_many_ranges(data):
@@ -149,6 +148,49 @@ def test_many_ranges(data):
     rng_tuples = [data.draw(range_tuples()) for _ in range(n_ranges)]
     ranges = [range_tuple_to_str(rng) for rng in rng_tuples]
     note(ranges)
-    result = filter_versions(VERSIONS, ranges)
+    result = api.filter_versions(VERSIONS, ranges)
     for rng in rng_tuples:
         _check(result, *rng)
+
+
+@given(data=data(),
+       current_version=versions())
+@settings(suppress_health_check=(HealthCheck.filter_too_much,))
+def test_next_filtered_version(data, current_version):
+    n_ranges = data.draw(integers(min_value=0, max_value=N + 1))
+    rng_tuples = [data.draw(range_tuples()) for _ in range(n_ranges)]
+    ranges = [range_tuple_to_str(rng) for rng in rng_tuples]
+    note(ranges)
+    result = api.next_filtered_version(current_version=str(current_version),
+                                       asc_versions=VERSIONS,
+                                       ranges=ranges)
+    if result is None:
+        filtered_versions = api.filter_versions(asc_versions=VERSIONS,
+                                                ranges=ranges)
+        no_versions = filtered_versions == []
+        # -1 is smaller than any version in VERSIONS, this is just for the code
+        # not to explode in case no filtered versions were returned. In that
+        # case, the `current_version_greater_than_filtered` case is irrelevant.
+        max_version = filtered_versions[-1] if filtered_versions else -1
+        version_too_big = int(max_version) < current_version
+        assert no_versions or version_too_big
+    else:
+        assert int(result) >= int(current_version)
+
+
+@given(data=data())
+@settings(suppress_health_check=(HealthCheck.filter_too_much,))
+def test_maximum_filtered_version(data):
+    n_ranges = data.draw(integers(min_value=0, max_value=N + 1))
+    rng_tuples = [data.draw(range_tuples()) for _ in range(n_ranges)]
+    ranges = [range_tuple_to_str(rng) for rng in rng_tuples]
+    note(ranges)
+    result = api.maximum_filtered_version(asc_versions=VERSIONS,
+                                          ranges=ranges)
+
+    filtered_versions = api.filter_versions(asc_versions=VERSIONS,
+                                            ranges=ranges)
+    if result is None:
+        assert not filtered_versions
+    else:
+        assert result == filtered_versions[-1]

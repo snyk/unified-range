@@ -56,3 +56,36 @@ def filter_versions(asc_versions: List[str], ranges: List[str]) -> List[str]:
                 f'Not a valid semver or unified/maven range - ({rng})')
 
     return utils.not_included_versions(asc_versions, rngs_unified)
+
+
+def next_filtered_version(current_version: str, asc_versions: List[str],
+                          ranges: List[str]) -> List[str]:
+    """
+    Return the first version that not satisfies any range.
+    Input versions must be ordered in ascending order and include all
+    the versions that are specified in the ranges.
+    """
+    if current_version not in asc_versions:
+        raise ValueError('current_version given is not part of asc_version')
+    minimal_version = None
+    index_current_version = asc_versions.index(current_version)
+    filtered_versions = filter_versions(asc_versions, ranges)
+    for v in filtered_versions:
+        if index_current_version <= asc_versions.index(v):
+            minimal_version = v
+            break
+    return minimal_version
+
+
+def maximum_filtered_version(asc_versions: List[str],
+                             ranges: List[str]) -> List[str]:
+    """
+    Return the first version that not satisfies any range.
+    Input versions must be ordered in ascending order and include all
+    the versions that are specified in the ranges.
+    """
+    filtered_versions = filter_versions(asc_versions, ranges)
+    if filtered_versions:
+        return filtered_versions[-1]
+    else:
+        return None

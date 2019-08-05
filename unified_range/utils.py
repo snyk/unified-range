@@ -47,7 +47,7 @@ def is_unified_range(rng):
     return _is_unified_ops(rng) and not _is_semver_ops(rng)
 
 
-def transform_to_semver(unified_spec: str) -> str:
+def transform_to_semver(unified_spec: str, separator: str) -> str:
     """
     Transform unified spec (following the maven VersioRange spec,
     https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html)
@@ -55,7 +55,11 @@ def transform_to_semver(unified_spec: str) -> str:
     https://github.com/npm/node-semver#ranges).
 
     (1.2.3, 2.4.6] ----> >1.2.3 <=2.4.6
+    Or (when separator = ', ')
+    (1.2.3, 2.4.6] ----> >1.2.3, <=2.4.6
+
     :param unified_spec: str
+    :param separator: str
     :return: semver: string
     """
     # FIXME: use semver_operators and _is_semver_{ops,range}
@@ -88,8 +92,9 @@ def transform_to_semver(unified_spec: str) -> str:
                 if restriction.has_inclusive_upper:
                     lt_lte = operators["lte"]
                 semvers.append(
-                    "{}{} {}{}".format(gt_gte, restriction.lower_bound,
-                                       lt_lte, restriction.upper_bound))
+                    "{}{}{}{}{}".format(gt_gte, restriction.lower_bound,
+                                        separator,
+                                        lt_lte, restriction.upper_bound))
         # one constraint semver `>=1.2.3`
         # {operator}{version}
         else:

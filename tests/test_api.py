@@ -23,6 +23,28 @@ def test_semver_full_way():
     assert (results == expected_results)
 
 
+def test_comma_separated_semver():
+    """
+    1. Test conversion from semver -> unified -> semver with commas.
+    2. Validate the results against manually validated expected file.
+    """
+    results = []
+
+    with open("tests/test_data/semver-ranges.txt", "r") as semver_rngs:
+        semver_ranges = semver_rngs.read().splitlines()
+
+    with open("tests/test_data/expected-semver-ranges-comma-separated.txt",
+              "r") as expected_semver:
+        expected_results = expected_semver.read().splitlines()
+
+    for rng in semver_ranges:
+        unified = api.from_semver(rng)
+        semver_with_comma = api.to_semver_comma_separated(str(unified))
+        results.append(str(semver_with_comma))
+
+    assert (results == expected_results)
+
+
 def test_unified_full_way():
     """
     1. Test conversion from unified -> semver -> unified.

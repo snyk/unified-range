@@ -22,7 +22,19 @@ def to_semver(spec: str) -> str:
     :param spec: str
     :return: semver
     """
-    semver = utils.transform_to_semver(spec)
+    semver = utils.transform_to_semver(spec, separator=" ")
+    return semver
+
+
+def to_semver_comma_separated(spec: str) -> str:
+    """
+    Convert unified range string to semver string, with
+    comma (and space) separating restrictions in case there are
+    2. For example: `>1.2.3, <=4.5.6`
+    :param spec: str
+    :return: semver
+    """
+    semver = utils.transform_to_semver(spec, separator=", ")
     return semver
 
 

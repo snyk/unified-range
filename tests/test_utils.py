@@ -25,6 +25,15 @@ expected_npm_semver_range = [
     '<2.11.2 || >=3.0.0 <3.6.4 || >=4.0.0 <4.5.7 || >=5.0.0 <5.2.1'
 ]
 
+expected_comma_separated_semver_range = [
+    '*', '1.2.3', '2.0.0 || 2.1.0',
+    '<0.1.2', '<=0.12.7',
+    '<5.6.5 || >=6, <6.0.1',
+    '<2.0.20180219', '<1.3.0-rc.4',
+    '<0.0.0', '>=0.9.0, <0.10.0',
+    '<2.11.2 || >=3.0.0, <3.6.4 || >=4.0.0, <4.5.7 || >=5.0.0, <5.2.1'
+]
+
 before_clean = [
     # npm
     "=3.0.0-rc.1",
@@ -104,8 +113,16 @@ def test_transform_to_semver():
     results = []
     # using the expected results of npm to check the full conversion.
     for unified in expected_version_range:
-        results.append(utils.transform_to_semver(unified))
+        results.append(utils.transform_to_semver(unified, separator=' '))
     assert (expected_npm_semver_range == list(map(str, results)))
+
+
+def test_transform_to_semver_comma_separated():
+    results = []
+    # using the expected results of npm to check the full conversion.
+    for unified in expected_version_range:
+        results.append(utils.transform_to_semver(unified, separator=', '))
+    assert (expected_comma_separated_semver_range == list(map(str, results)))
 
 
 def test_clean_semver():
@@ -126,8 +143,8 @@ def test_transform_to_semver_failure():
     results = []
     for semver in test_npm_semver_ranges:
         try:
-            utils.transform_to_semver(semver)
-            assert False, 'test_transform_to_semver_failure0 did not raise exception!'
+            utils.transform_to_semver(semver, separator=' ')
+            assert False, 'test_transform_to_semver_failure did not raise exception!'
         except ValueError as msg:
             assert ((str(msg) == 'Version ranges seems to already be semver')
                     or (str(msg) == 'Recommended Version is currently not supported.'))

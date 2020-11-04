@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Set
 
 from unified_range import utils
 
@@ -53,7 +53,7 @@ def filter_versions(asc_versions: List[str], ranges: List[str]) -> List[str]:
     Return an ordered list of versions that not satisfies any range.
     Input versions must be ordered in ascending order and include all
     the versions that are specified in the ranges.
-    :param ord_versions:
+    :param asc_versions:
     :param ranges:
     :return:
     """
@@ -101,3 +101,17 @@ def maximum_filtered_version(asc_versions: List[str],
         return filtered_versions[-1]
     else:
         return None
+
+
+def merge_ranges(asc_versions: List[str], ranges: List[str]) -> Tuple[Set[str]]:
+    rngs_unified = []
+    for rng in ranges:
+        if is_semver_range(rng):
+            rngs_unified.append(unified_range(from_semver(rng)))
+        elif is_unified_range(rng):
+            rngs_unified.append(unified_range(rng))
+        else:
+            raise ValueError(
+                f'Not a valid semver or unified/maven range - ({rng})')
+
+    return utils.merged_ranges(asc_versions, rngs_unified)

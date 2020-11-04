@@ -1,5 +1,7 @@
 import re
-from typing import List, Optional
+from collections import defaultdict
+from copy import deepcopy
+from typing import List, Optional, Tuple, Set
 
 from unified_range import models
 
@@ -227,8 +229,8 @@ def not_included_versions(ordered_version_list: List[str],
                     # (,) [,] - all version included
                     return []
                 # Exact version range - `[VER]`
-                # lower or upper versions can be taken, and inclusive set to false
-                # to get the right index.
+                # lower or upper versions can be taken, and inclusive set to
+                # False to get the right index.
                 exact_index = _get_index(ordered_version_list, lower.version)
                 # exact index to be removed is added as a set to rst_indices
                 rst_indices.append(set((exact_index,)))
@@ -256,3 +258,49 @@ def not_included_versions(ordered_version_list: List[str],
     not_included = [v for i, v in enumerate(ordered_version_list) if
                     i not in ind_to_remove]
     return not_included
+
+
+def merged_ranges(
+        asc_versions: List[str],
+        ranges: List[str]) -> Tuple[Set[str]]:
+    version_groups_from_ranges = defaultdict(set)
+    for rng in ranges:
+        versions = _convert_range_to_versions(
+            asc_versions, rng)
+        version_groups_from_ranges[versions].add(rng)
+
+    groups_before_loop = []      # to pass the while condition on the 1st time
+    groups_after_loop = list(version_groups_from_ranges.keys())
+    while groups_before_loop != groups_after_loop:
+        groups_before_loop = deepcopy(groups_after_loop)
+        for i, group in enumerate(groups_before_loop):
+            for rng in group:
+                for j in range(i+1, len(groups_before_loop) + 1):
+                    # go over all ranges in the other groups, until
+                    # an intersections is found - then merge the 2 groups
+                    other_group = groups_before_loop[j]
+                    for other_range in other_group:
+                        if rng.intersection(other_range):
+                            groups_after_loop[i].extend(other_group)
+                            del groups_after_loop[j]
+                            break
+
+                if groups_before_loop != groups_after_loop:
+                    # 2 groups were merged - restart the while loop
+                    break
+
+            if groups_before_loop != groups_after_loop:
+                # 2 groups were merged - restart the while loop
+                break
+
+    # assert last loop completed with no affect - nothing more to merge
+    assert groups_before_loop == groups_after_loop
+    import pudb; pudb.set_trace()
+    # return tuple(frozenset(version_groups_from_ranges[rng] ))
+    return []
+
+
+def _convert_range_to_versions(asc_versions: List[str], rng: str):
+    import pudb; pudb.set_trace()
+    if
+    x = 1

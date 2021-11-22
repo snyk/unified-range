@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "unified-range"
-version = "0.1.0"
+version = "0.1.1"
 description = "Convert between semver range and maven version range"
 authors = ["Snyk"]
 license = "MIT License"

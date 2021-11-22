@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "unified-range"
+version = "0.1.0"
+description = "Convert between semver range and maven version range"
+authors = ["Snyk"]
+license = "MIT License"
+readme = "README.md"
+repository = "https://github.com/snyk/unified-range"
+classifiers = [
+        "Operating System :: OS Independent",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+
+[tool.poetry.dev-dependencies]
+pudb = "*"
+ipython = "*"
+pytest = "^6.2.5"
+hypothesis = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

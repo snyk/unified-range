@@ -1,0 +1,73 @@
+---
+version: 2.1
+
+orbs:
+  slack: circleci/slack@4.1.3
+
+executors:
+  python36:
+    docker:
+      - image: "cimg/python:3.6.15"
+        auth:
+          username: snyksecurity
+          password: $DOCKER_HUB_TOKEN
+commands:
+  install_poetry:
+    description: Pin poetry installed version (downgrades version when needed)
+    steps:
+      - run: poetry self update 1.1.10
+      # FIXME: remove after PR review is done
+      - run: |
+          poetry config repositories.testpypi https://test.pypi.org/legacy/
+          poetry config pypi-token.testpypi ${POETRY_TEST_PYPI_TOKEN_PYPI}
+jobs:
+  test:
+    description: Deploy RIO spiders to the dev project in ScrapingHub
+    executor: python36
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - install_poetry
+      - run:
+          name: Install dependencies and project in dev mode
+          command: poetry install
+      - run:
+          name: Run tests
+          command: poetry run pytest
+
+  build_and_release:
+    description: Build and release new version of the package to PyPi
+    executor: python36
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - install_poetry
+      # Use `poetry publish` to Publish the package using username and password from CircleCI environment variables
+      # Which can be configured inside CircleCI's interface
+      - run:
+          name: Release and Publish to PyPI
+          # Rely on POETRY_PYPI_TOKEN_PYPI ENV variable
+          command: |
+            poetry publish --build --no-interaction -r testpypi
+      - slack/notify:
+          channel: sec-eng-red-alerts
+          event: fail
+          template: basic_fail_1
+
+workflows:
+  version: 2
+  build_and_release:
+    jobs:
+      - test:
+          name: Run Tests
+      - build_and_release:
+          name: Build and Release a new version to PyPI
+          context:
+            - snyk-bot-slack
+          requires:
+            - Run Tests
+          filters:
+            branches:
+              only: main

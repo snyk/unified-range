@@ -80,7 +80,7 @@ jobs:
 
 workflows:
   version: 2
-  build_and_release:
+  test_and_release:
     jobs:
       - test:
           name: Run Tests - python 3.9

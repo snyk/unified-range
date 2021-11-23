@@ -5,25 +5,43 @@ orbs:
   slack: circleci/slack@4.1.3
 
 executors:
-  python36:
+  python39:
     docker:
-      - image: "cimg/python:3.6.15"
+      - image: "cimg/python:3.9"
         auth:
           username: snyksecurity
           password: $DOCKER_HUB_TOKEN
+  python38:
+    docker:
+      - image: "cimg/python:3.8"
+        auth:
+          username: snyksecurity
+          password: $DOCKER_HUB_TOKEN
+  python37:
+    docker:
+      - image: "cimg/python:3.7"
+        auth:
+          username: snyksecurity
+          password: $DOCKER_HUB_TOKEN
+  python36:
+    docker:
+      - image: "cimg/python:3.6"
+        auth:
+          username: snyksecurity
+          password: $DOCKER_HUB_TOKEN
+
 commands:
   install_poetry:
     description: Pin poetry installed version (downgrades version when needed)
     steps:
       - run: poetry self update 1.1.10
-      # FIXME: remove after PR review is done
-      - run: |
-          poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config pypi-token.testpypi ${POETRY_TEST_PYPI_TOKEN_PYPI}
 jobs:
   test:
-    description: Deploy RIO spiders to the dev project in ScrapingHub
-    executor: python36
+    description: Run Tests for a specific python vesion
+    parameters:
+      executor_name:
+        type: executor
+    executor: << parameters.executor_name >>
     working_directory: ~/project
     steps:
       - checkout:
@@ -38,19 +56,23 @@ jobs:
 
   build_and_release:
     description: Build and release new version of the package to PyPi
-    executor: python36
+    executor: python39
     working_directory: ~/project
     steps:
       - checkout:
           path: ~/project
       - install_poetry
+      - run:
+          name: Configure Poetry PyPi token
+          command: |
+              poetry config pypi-token.testpypi ${POETRY_PYPI_TOKEN_PYPI}
       # Use `poetry publish` to Publish the package using username and password from CircleCI environment variables
       # Which can be configured inside CircleCI's interface
       - run:
           name: Release and Publish to PyPI
           # Rely on POETRY_PYPI_TOKEN_PYPI ENV variable
           command: |
-            poetry publish --build --no-interaction -r testpypi
+              poetry publish --build --no-interaction
       - slack/notify:
           channel: sec-eng-red-alerts
           event: fail
@@ -61,13 +83,26 @@ workflows:
   build_and_release:
     jobs:
       - test:
-          name: Run Tests
+          name: Run Tests - python 3.9
+          executor_name: python39
+      - test:
+          name: Run Tests - python 3.8
+          executor_name: python38
+      - test:
+          name: Run Tests - python 3.7
+          executor_name: python38
+      - test:
+          name: Run Tests - python 3.6
+          executor_name: python38
       - build_and_release:
           name: Build and Release a new version to PyPI
           context:
             - snyk-bot-slack
           requires:
-            - Run Tests
+            - Run Tests - python 3.9
+            - Run Tests - python 3.7
+            - Run Tests - python 3.8
+            - Run Tests - python 3.6
           filters:
             branches:
               only: main

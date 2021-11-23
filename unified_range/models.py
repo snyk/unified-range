@@ -1,12 +1,9 @@
-from attr import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, NamedTuple
 
 
-@dataclass
-class Bound:
+class Bound(NamedTuple):
     version: str
     inclusive: bool = False
-
 
 # FIXME: change implemntation of Version - str
 class Version(object):

@@ -1,9 +1,7 @@
 import re
 from typing import List, Optional
 
-from unified_range import models
-
-from unified_range.models import UnifiedVersionRange
+from unified_range.models import UnifiedVersionRange, Restriction, Version
 
 semver_operators = {"lt": "<", "lte": "<=", "gt": ">", "gte": ">=", "eq": "="}
 unified_operators = {"lt": ")", "lte": "]", "gt": "(", "gte": "["}
@@ -68,9 +66,8 @@ def transform_to_semver(unified_spec: str, separator: str) -> str:
     if is_semver_range(unified_spec):
         raise ValueError(
             "Version ranges seems to already be semver")
-    contains_all_version = models.UnifiedVersionRange(None, [
-        models.Restriction.all_versions()])
-    unified_version = models.UnifiedVersionRange.create_from_spec(unified_spec)
+    contains_all_version = UnifiedVersionRange(None, [Restriction.all_versions()])
+    unified_version = UnifiedVersionRange.create_from_spec(unified_spec)
     if unified_version == contains_all_version:
         return "*"
 
@@ -138,8 +135,7 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
         semver = _comparator_trim(semver)
 
     if semver == "*":
-        return models.UnifiedVersionRange(None,
-                                          [models.Restriction.all_versions()])
+        return UnifiedVersionRange(None, [Restriction.all_versions()])
     semver_restrictions = semver.split("||")
 
     restrictions = []
@@ -151,8 +147,7 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
         has_inclusive_upper = False
         for constraint in constraints:
             if constraint.count("<") > 1 or constraint.count(">") > 1:
-                raise ValueError(
-                    "semver range contains </> more than one time.")
+                raise ValueError("semver range contains </> more than one time.")
             if constraint.startswith(operators["lte"]):
                 upper_bound = constraint[2:]
                 has_inclusive_upper = True
@@ -170,17 +165,16 @@ def create_from_semver(semver: str) -> UnifiedVersionRange:
                 has_inclusive_lower = True
                 has_inclusive_upper = True
 
-        lower_version = models.Version(None)
-        upper_version = models.Version(None)
+        lower_version = Version(None)
+        upper_version = Version(None)
         if lower_bound:
-            lower_version = models.Version(lower_bound)
+            lower_version = Version(lower_bound)
         if upper_bound:
-            upper_version = models.Version(upper_bound)
+            upper_version = Version(upper_bound)
         restrictions.append(
-            models.Restriction(lower_version, has_inclusive_lower,
-                               upper_version, has_inclusive_upper))
+            Restriction(lower_version, has_inclusive_lower, upper_version, has_inclusive_upper))
 
-    return models.UnifiedVersionRange(None, restrictions)
+    return UnifiedVersionRange(None, restrictions)
 
 
 def not_included_versions(ordered_version_list: List[str],

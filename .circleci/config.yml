@@ -3,6 +3,7 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@4.1.3
+  prodsec: snyk/prodsec-orb@1.0
 
 parameters:
   poetry-version:
@@ -120,3 +121,8 @@ workflows:
           filters:
             branches:
               only: main
+      - prodsec/secrets-scan:
+          name: Scan repository for secrets
+          context:
+            - snyk-bot-slack
+          channel: sec-eng-deployments

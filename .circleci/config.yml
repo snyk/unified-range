@@ -24,7 +24,11 @@ executors:
   python37:
     docker:
       - image: "cimg/python:3.7"
-
+commands:
+  install_poetry:
+    description: Pin poetry installed version (downgrades version when needed)
+    steps:
+      - run: poetry self update 1.2.2
 jobs:
   test:
     description: Run Tests for a specific python version

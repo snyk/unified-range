@@ -140,3 +140,8 @@ workflows:
           name: Security Scans
           context:
             - analysis_security_intelligence
+          requires:
+            - Run Tests - python 3.10
+            - Run Tests - python 3.9
+            - Run Tests - python 3.8
+            - Run Tests - python 3.7

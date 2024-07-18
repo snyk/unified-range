@@ -3,7 +3,7 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@4.1.3
-  prodsec: snyk/prodsec-orb@1.0
+  prodsec: snyk/prodsec-orb@1
 
 parameters:
   poetry-version:
@@ -11,6 +11,11 @@ parameters:
     # pinned due to poetry issues on circleci
     # https://github.com/python-poetry/poetry/issues/7184#
     default: "1.2.2"
+
+defaults_python: &defaults_python
+  resource_class: small
+  docker:
+    - image: cimg/python:3.12.1
 
 executors:
   python310:
@@ -31,6 +36,11 @@ commands:
     steps:
       - run: poetry self update 1.2.2
 jobs:
+  security-scans:
+    <<: *defaults_python
+    steps:
+      - prodsec/security_scans:
+          mode: gate
   test:
     description: Run Tests for a specific python version
     parameters:
@@ -125,4 +135,8 @@ workflows:
           name: Scan repository for secrets
           context:
             - snyk-bot-slack
-          channel: sec-eng-deployments
+          channel: sec-eng-deployments      
+      - security-scans:
+          name: Security Scans
+          context:
+            - analysis_security_intelligence

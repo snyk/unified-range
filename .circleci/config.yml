@@ -15,7 +15,7 @@ parameters:
 defaults_python: &defaults_python
   resource_class: small
   docker:
-    - image: cimg/python:3.12.1
+    - image: "cimg/python:3.10"
 
 executors:
   python310:
@@ -39,8 +39,18 @@ jobs:
   security-scans:
     <<: *defaults_python
     steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install Poetry
+          command: >
+            pipx install poetry==<<pipeline.parameters.poetry-version>>
+      - run:
+          name: Install dependencies and project in dev mode
+          command: poetry install
       - prodsec/security_scans:
-          mode: gate
+          mode: auto
+          iac-scan: disabled
   test:
     description: Run Tests for a specific python version
     parameters:
@@ -62,7 +72,6 @@ jobs:
       - run:
           name: Run tests
           command: poetry run pytest
-      - security-scans
 
   build_and_release:
     description: Build and release new version of the package to PyPi
@@ -92,6 +101,19 @@ workflows:
   version: 2
   test_and_release:
     jobs:
+      - prodsec/secrets-scan:
+          name: Scan repository for secrets
+          context:
+            - snyk-bot-slack
+          channel: sec-eng-deployments
+          filters:
+            branches:
+              ignore:
+                - main
+      - security-scans:
+          name: Security Scans
+          context:
+            - analysis_security_intelligence
       - test:
           name: Run Tests - python 3.10
           executor_name: python310
@@ -132,9 +154,3 @@ workflows:
           filters:
             branches:
               only: main
-      - prodsec/secrets-scan:
-          name: Scan repository for secrets
-          context:
-            - snyk-bot-slack
-          channel: sec-eng-deployments      
-

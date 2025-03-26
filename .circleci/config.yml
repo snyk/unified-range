@@ -105,7 +105,7 @@ workflows:
           name: Scan repository for secrets
           context:
             - snyk-bot-slack
-          channel: sec-eng-deployments
+          channel: snyk-vuln-alerts-security-intelligence
           filters:
             branches:
               ignore:

@@ -117,28 +117,24 @@ workflows:
       - test:
           name: Run Tests - python 3.10
           executor_name: python310
-          context: snyk-security-rnd
           filters:
             branches:
               ignore: main
       - test:
           name: Run Tests - python 3.9
           executor_name: python39
-          context: snyk-security-rnd
           filters:
             branches:
               ignore: main
       - test:
           name: Run Tests - python 3.8
           executor_name: python38
-          context: snyk-security-rnd
           filters:
             branches:
               ignore: main
       - test:
           name: Run Tests - python 3.7
           executor_name: python37
-          context: snyk-security-rnd
           filters:
             branches:
               ignore: main

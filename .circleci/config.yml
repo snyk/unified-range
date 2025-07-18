@@ -105,7 +105,7 @@ workflows:
           name: Scan repository for secrets
           context:
             - snyk-bot-slack
-          channel: snyk-vuln-alerts-security-intelligence
+          channel: snyk-vuln-alerts-intelligence-engineering
           filters:
             branches:
               ignore:
@@ -113,7 +113,7 @@ workflows:
       - security-scans:
           name: Security Scans
           context:
-            - analysis_security_intelligence
+            - codesec_intelligence-engineering
       - test:
           name: Run Tests - python 3.10
           executor_name: python310

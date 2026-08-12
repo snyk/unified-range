@@ -105,6 +105,7 @@ workflows:
           name: Scan repository for secrets
           context:
             - snyk-bot-slack
+            - prodsec-orb-runtime
           channel: snyk-vuln-alerts-intelligence-engineering
           filters:
             branches:
@@ -114,6 +115,7 @@ workflows:
           name: Security Scans
           context:
             - codesec_intelligence-engineering
+            - prodsec-orb-runtime
       - test:
           name: Run Tests - python 3.10
           executor_name: python310
